@@ -100,8 +100,11 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-         format: 'sarif'
+         format: ${{ env.REGISTRY }}
          output: 'trivy-results.sarif'
+        env:
+          TRIVY_USERNAME: ${{ env.USER }}
+          TRIVY_PASSWORD: ${{ secrets.ACR_SECRET }}
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v1
         with:
