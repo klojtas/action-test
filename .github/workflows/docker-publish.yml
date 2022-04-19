@@ -14,7 +14,11 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
-
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  security-events: write
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: wojgithubactions.azurecr.io
@@ -92,3 +96,13 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: cosign sign ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+         image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+         format: 'sarif'
+         output: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
